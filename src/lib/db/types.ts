@@ -10,6 +10,8 @@ export type Database = {
           banned: boolean;
           ban_reason: string | null;
           avatar_url: string | null;
+          username: string | null;
+          is_collection_public: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -21,6 +23,8 @@ export type Database = {
           banned?: boolean;
           ban_reason?: string | null;
           avatar_url?: string | null;
+          username?: string | null;
+          is_collection_public?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -32,6 +36,8 @@ export type Database = {
           banned?: boolean;
           ban_reason?: string | null;
           avatar_url?: string | null;
+          username?: string | null;
+          is_collection_public?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -157,52 +163,82 @@ export type Database = {
         };
         Relationships: [];
       };
-      pokemon_cards: {
+      cards: {
         Row: {
           id: string;
           user_id: string;
+          external_id: string | null;
           name: string;
-          rarity:
-            | "Common"
-            | "Uncommon"
-            | "Rare"
-            | "Holo Rare"
-            | "Ultra Rare"
-            | "Secret Rare";
-          hp: number;
-          photo_url: string | null;
+          supertype: string | null;
+          subtypes: string[] | null;
+          hp: string | null;
+          types: string[] | null;
+          rarity: string | null;
+          set_name: string | null;
+          set_id: string | null;
+          number: string | null;
+          image_url: string | null;
+          artist: string | null;
+          condition:
+            | "Near Mint"
+            | "Lightly Played"
+            | "Moderately Played"
+            | "Heavily Played"
+            | "Damaged";
+          quantity: number;
+          notes: string | null;
           created_at: string;
           updated_at: string;
         };
         Insert: {
           id?: string;
           user_id: string;
+          external_id?: string | null;
           name: string;
-          rarity:
-            | "Common"
-            | "Uncommon"
-            | "Rare"
-            | "Holo Rare"
-            | "Ultra Rare"
-            | "Secret Rare";
-          hp: number;
-          photo_url?: string | null;
+          supertype?: string | null;
+          subtypes?: string[] | null;
+          hp?: string | null;
+          types?: string[] | null;
+          rarity?: string | null;
+          set_name?: string | null;
+          set_id?: string | null;
+          number?: string | null;
+          image_url?: string | null;
+          artist?: string | null;
+          condition?:
+            | "Near Mint"
+            | "Lightly Played"
+            | "Moderately Played"
+            | "Heavily Played"
+            | "Damaged";
+          quantity?: number;
+          notes?: string | null;
           created_at?: string;
           updated_at?: string;
         };
         Update: {
           id?: string;
           user_id?: string;
+          external_id?: string | null;
           name?: string;
-          rarity?:
-            | "Common"
-            | "Uncommon"
-            | "Rare"
-            | "Holo Rare"
-            | "Ultra Rare"
-            | "Secret Rare";
-          hp?: number;
-          photo_url?: string | null;
+          supertype?: string | null;
+          subtypes?: string[] | null;
+          hp?: string | null;
+          types?: string[] | null;
+          rarity?: string | null;
+          set_name?: string | null;
+          set_id?: string | null;
+          number?: string | null;
+          image_url?: string | null;
+          artist?: string | null;
+          condition?:
+            | "Near Mint"
+            | "Lightly Played"
+            | "Moderately Played"
+            | "Heavily Played"
+            | "Damaged";
+          quantity?: number;
+          notes?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -212,25 +248,21 @@ export type Database = {
     Views: { [_ in never]: never };
     Functions: { [_ in never]: never };
     Enums: {
-      card_rarity:
-        | "Common"
-        | "Uncommon"
-        | "Rare"
-        | "Holo Rare"
-        | "Ultra Rare"
-        | "Secret Rare";
+      card_condition:
+        | "Near Mint"
+        | "Lightly Played"
+        | "Moderately Played"
+        | "Heavily Played"
+        | "Damaged";
       user_role: "owner" | "admin" | "user";
     };
     CompositeTypes: { [_ in never]: never };
   };
 };
 
-export type PokemonCard =
-  Database["public"]["Tables"]["pokemon_cards"]["Row"];
-export type PokemonCardInsert =
-  Database["public"]["Tables"]["pokemon_cards"]["Insert"];
-export type PokemonCardUpdate =
-  Database["public"]["Tables"]["pokemon_cards"]["Update"];
-export type CardRarity = PokemonCard["rarity"];
+export type Card = Database["public"]["Tables"]["cards"]["Row"];
+export type CardInsert = Database["public"]["Tables"]["cards"]["Insert"];
+export type CardUpdate = Database["public"]["Tables"]["cards"]["Update"];
+export type CardCondition = Card["condition"];
 
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];

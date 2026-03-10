@@ -8,6 +8,7 @@ export const env = createEnv({
     VITE_SUPABASE_ANON_KEY: z.string().min(1),
     VITE_APP_TITLE: z.string().default("Pokémon Card Collection"),
     VITE_SENTRY_DSN: z.string().optional(),
+    VITE_POKEMONTCG_API_KEY: z.string().optional(),
   },
   runtimeEnv: import.meta.env,
 });

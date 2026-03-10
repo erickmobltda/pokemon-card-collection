@@ -11,16 +11,17 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
+import { Route as ProfileUsernameRouteImport } from './routes/profile/$username'
 import { Route as DashboardLayoutRouteImport } from './routes/dashboard/_layout'
 import { Route as authResetPasswordRouteImport } from './routes/(auth)/reset-password'
 import { Route as authRegisterRouteImport } from './routes/(auth)/register'
 import { Route as authLoginRouteImport } from './routes/(auth)/login'
 import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
 import { Route as DashboardSettingsIndexRouteImport } from './routes/dashboard/settings/index'
-import { Route as DashboardPokemonCardsIndexRouteImport } from './routes/dashboard/pokemon-cards/index'
 import { Route as DashboardAdminIndexRouteImport } from './routes/dashboard/admin/index'
-import { Route as DashboardPokemonCardsNewRouteImport } from './routes/dashboard/pokemon-cards/new'
-import { Route as DashboardPokemonCardsIdRouteImport } from './routes/dashboard/pokemon-cards/$id'
+import { Route as DashboardCardsSearchRouteImport } from './routes/dashboard/cards/search'
+import { Route as DashboardCardsNewRouteImport } from './routes/dashboard/cards/new'
+import { Route as DashboardCardsIdRouteImport } from './routes/dashboard/cards/$id'
 import { Route as DashboardAdminSettingsRouteImport } from './routes/dashboard/admin/settings'
 import { Route as DashboardAdminInvitationsRouteImport } from './routes/dashboard/admin/invitations'
 import { Route as DashboardAdminCostTrackingRouteImport } from './routes/dashboard/admin/cost-tracking'
@@ -35,6 +36,11 @@ const IndexRoute = IndexRouteImport.update({
 const DashboardIndexRoute = DashboardIndexRouteImport.update({
   id: '/dashboard/',
   path: '/dashboard/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileUsernameRoute = ProfileUsernameRouteImport.update({
+  id: '/profile/$username',
+  path: '/profile/$username',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardLayoutRoute = DashboardLayoutRouteImport.update({
@@ -67,26 +73,24 @@ const DashboardSettingsIndexRoute = DashboardSettingsIndexRouteImport.update({
   path: '/dashboard/settings/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DashboardPokemonCardsIndexRoute =
-  DashboardPokemonCardsIndexRouteImport.update({
-    id: '/dashboard/pokemon-cards/',
-    path: '/dashboard/pokemon-cards/',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const DashboardAdminIndexRoute = DashboardAdminIndexRouteImport.update({
   id: '/dashboard/admin/',
   path: '/dashboard/admin/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DashboardPokemonCardsNewRoute =
-  DashboardPokemonCardsNewRouteImport.update({
-    id: '/dashboard/pokemon-cards/new',
-    path: '/dashboard/pokemon-cards/new',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const DashboardPokemonCardsIdRoute = DashboardPokemonCardsIdRouteImport.update({
-  id: '/dashboard/pokemon-cards/$id',
-  path: '/dashboard/pokemon-cards/$id',
+const DashboardCardsSearchRoute = DashboardCardsSearchRouteImport.update({
+  id: '/dashboard/cards/search',
+  path: '/dashboard/cards/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardCardsNewRoute = DashboardCardsNewRouteImport.update({
+  id: '/dashboard/cards/new',
+  path: '/dashboard/cards/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardCardsIdRoute = DashboardCardsIdRouteImport.update({
+  id: '/dashboard/cards/$id',
+  path: '/dashboard/cards/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardAdminSettingsRoute = DashboardAdminSettingsRouteImport.update({
@@ -126,15 +130,16 @@ export interface FileRoutesByFullPath {
   '/register': typeof authRegisterRoute
   '/reset-password': typeof authResetPasswordRoute
   '/dashboard': typeof DashboardLayoutRoute
+  '/profile/$username': typeof ProfileUsernameRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/admin/content-moderation': typeof DashboardAdminContentModerationRoute
   '/dashboard/admin/cost-tracking': typeof DashboardAdminCostTrackingRoute
   '/dashboard/admin/invitations': typeof DashboardAdminInvitationsRoute
   '/dashboard/admin/settings': typeof DashboardAdminSettingsRoute
-  '/dashboard/pokemon-cards/$id': typeof DashboardPokemonCardsIdRoute
-  '/dashboard/pokemon-cards/new': typeof DashboardPokemonCardsNewRoute
+  '/dashboard/cards/$id': typeof DashboardCardsIdRoute
+  '/dashboard/cards/new': typeof DashboardCardsNewRoute
+  '/dashboard/cards/search': typeof DashboardCardsSearchRoute
   '/dashboard/admin/': typeof DashboardAdminIndexRoute
-  '/dashboard/pokemon-cards/': typeof DashboardPokemonCardsIndexRoute
   '/dashboard/settings/': typeof DashboardSettingsIndexRoute
   '/dashboard/admin/users/$userId': typeof DashboardAdminUsersUserIdRoute
 }
@@ -145,14 +150,15 @@ export interface FileRoutesByTo {
   '/register': typeof authRegisterRoute
   '/reset-password': typeof authResetPasswordRoute
   '/dashboard': typeof DashboardIndexRoute
+  '/profile/$username': typeof ProfileUsernameRoute
   '/dashboard/admin/content-moderation': typeof DashboardAdminContentModerationRoute
   '/dashboard/admin/cost-tracking': typeof DashboardAdminCostTrackingRoute
   '/dashboard/admin/invitations': typeof DashboardAdminInvitationsRoute
   '/dashboard/admin/settings': typeof DashboardAdminSettingsRoute
-  '/dashboard/pokemon-cards/$id': typeof DashboardPokemonCardsIdRoute
-  '/dashboard/pokemon-cards/new': typeof DashboardPokemonCardsNewRoute
+  '/dashboard/cards/$id': typeof DashboardCardsIdRoute
+  '/dashboard/cards/new': typeof DashboardCardsNewRoute
+  '/dashboard/cards/search': typeof DashboardCardsSearchRoute
   '/dashboard/admin': typeof DashboardAdminIndexRoute
-  '/dashboard/pokemon-cards': typeof DashboardPokemonCardsIndexRoute
   '/dashboard/settings': typeof DashboardSettingsIndexRoute
   '/dashboard/admin/users/$userId': typeof DashboardAdminUsersUserIdRoute
 }
@@ -164,15 +170,16 @@ export interface FileRoutesById {
   '/(auth)/register': typeof authRegisterRoute
   '/(auth)/reset-password': typeof authResetPasswordRoute
   '/dashboard/_layout': typeof DashboardLayoutRoute
+  '/profile/$username': typeof ProfileUsernameRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/admin/content-moderation': typeof DashboardAdminContentModerationRoute
   '/dashboard/admin/cost-tracking': typeof DashboardAdminCostTrackingRoute
   '/dashboard/admin/invitations': typeof DashboardAdminInvitationsRoute
   '/dashboard/admin/settings': typeof DashboardAdminSettingsRoute
-  '/dashboard/pokemon-cards/$id': typeof DashboardPokemonCardsIdRoute
-  '/dashboard/pokemon-cards/new': typeof DashboardPokemonCardsNewRoute
+  '/dashboard/cards/$id': typeof DashboardCardsIdRoute
+  '/dashboard/cards/new': typeof DashboardCardsNewRoute
+  '/dashboard/cards/search': typeof DashboardCardsSearchRoute
   '/dashboard/admin/': typeof DashboardAdminIndexRoute
-  '/dashboard/pokemon-cards/': typeof DashboardPokemonCardsIndexRoute
   '/dashboard/settings/': typeof DashboardSettingsIndexRoute
   '/dashboard/admin/users/$userId': typeof DashboardAdminUsersUserIdRoute
 }
@@ -185,15 +192,16 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/dashboard'
+    | '/profile/$username'
     | '/dashboard/'
     | '/dashboard/admin/content-moderation'
     | '/dashboard/admin/cost-tracking'
     | '/dashboard/admin/invitations'
     | '/dashboard/admin/settings'
-    | '/dashboard/pokemon-cards/$id'
-    | '/dashboard/pokemon-cards/new'
+    | '/dashboard/cards/$id'
+    | '/dashboard/cards/new'
+    | '/dashboard/cards/search'
     | '/dashboard/admin/'
-    | '/dashboard/pokemon-cards/'
     | '/dashboard/settings/'
     | '/dashboard/admin/users/$userId'
   fileRoutesByTo: FileRoutesByTo
@@ -204,14 +212,15 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/dashboard'
+    | '/profile/$username'
     | '/dashboard/admin/content-moderation'
     | '/dashboard/admin/cost-tracking'
     | '/dashboard/admin/invitations'
     | '/dashboard/admin/settings'
-    | '/dashboard/pokemon-cards/$id'
-    | '/dashboard/pokemon-cards/new'
+    | '/dashboard/cards/$id'
+    | '/dashboard/cards/new'
+    | '/dashboard/cards/search'
     | '/dashboard/admin'
-    | '/dashboard/pokemon-cards'
     | '/dashboard/settings'
     | '/dashboard/admin/users/$userId'
   id:
@@ -222,15 +231,16 @@ export interface FileRouteTypes {
     | '/(auth)/register'
     | '/(auth)/reset-password'
     | '/dashboard/_layout'
+    | '/profile/$username'
     | '/dashboard/'
     | '/dashboard/admin/content-moderation'
     | '/dashboard/admin/cost-tracking'
     | '/dashboard/admin/invitations'
     | '/dashboard/admin/settings'
-    | '/dashboard/pokemon-cards/$id'
-    | '/dashboard/pokemon-cards/new'
+    | '/dashboard/cards/$id'
+    | '/dashboard/cards/new'
+    | '/dashboard/cards/search'
     | '/dashboard/admin/'
-    | '/dashboard/pokemon-cards/'
     | '/dashboard/settings/'
     | '/dashboard/admin/users/$userId'
   fileRoutesById: FileRoutesById
@@ -242,15 +252,16 @@ export interface RootRouteChildren {
   authRegisterRoute: typeof authRegisterRoute
   authResetPasswordRoute: typeof authResetPasswordRoute
   DashboardLayoutRoute: typeof DashboardLayoutRoute
+  ProfileUsernameRoute: typeof ProfileUsernameRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardAdminContentModerationRoute: typeof DashboardAdminContentModerationRoute
   DashboardAdminCostTrackingRoute: typeof DashboardAdminCostTrackingRoute
   DashboardAdminInvitationsRoute: typeof DashboardAdminInvitationsRoute
   DashboardAdminSettingsRoute: typeof DashboardAdminSettingsRoute
-  DashboardPokemonCardsIdRoute: typeof DashboardPokemonCardsIdRoute
-  DashboardPokemonCardsNewRoute: typeof DashboardPokemonCardsNewRoute
+  DashboardCardsIdRoute: typeof DashboardCardsIdRoute
+  DashboardCardsNewRoute: typeof DashboardCardsNewRoute
+  DashboardCardsSearchRoute: typeof DashboardCardsSearchRoute
   DashboardAdminIndexRoute: typeof DashboardAdminIndexRoute
-  DashboardPokemonCardsIndexRoute: typeof DashboardPokemonCardsIndexRoute
   DashboardSettingsIndexRoute: typeof DashboardSettingsIndexRoute
   DashboardAdminUsersUserIdRoute: typeof DashboardAdminUsersUserIdRoute
 }
@@ -269,6 +280,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard/'
       preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile/$username': {
+      id: '/profile/$username'
+      path: '/profile/$username'
+      fullPath: '/profile/$username'
+      preLoaderRoute: typeof ProfileUsernameRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard/_layout': {
@@ -313,13 +331,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSettingsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/dashboard/pokemon-cards/': {
-      id: '/dashboard/pokemon-cards/'
-      path: '/dashboard/pokemon-cards'
-      fullPath: '/dashboard/pokemon-cards/'
-      preLoaderRoute: typeof DashboardPokemonCardsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/dashboard/admin/': {
       id: '/dashboard/admin/'
       path: '/dashboard/admin'
@@ -327,18 +338,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardAdminIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/dashboard/pokemon-cards/new': {
-      id: '/dashboard/pokemon-cards/new'
-      path: '/dashboard/pokemon-cards/new'
-      fullPath: '/dashboard/pokemon-cards/new'
-      preLoaderRoute: typeof DashboardPokemonCardsNewRouteImport
+    '/dashboard/cards/search': {
+      id: '/dashboard/cards/search'
+      path: '/dashboard/cards/search'
+      fullPath: '/dashboard/cards/search'
+      preLoaderRoute: typeof DashboardCardsSearchRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/dashboard/pokemon-cards/$id': {
-      id: '/dashboard/pokemon-cards/$id'
-      path: '/dashboard/pokemon-cards/$id'
-      fullPath: '/dashboard/pokemon-cards/$id'
-      preLoaderRoute: typeof DashboardPokemonCardsIdRouteImport
+    '/dashboard/cards/new': {
+      id: '/dashboard/cards/new'
+      path: '/dashboard/cards/new'
+      fullPath: '/dashboard/cards/new'
+      preLoaderRoute: typeof DashboardCardsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/cards/$id': {
+      id: '/dashboard/cards/$id'
+      path: '/dashboard/cards/$id'
+      fullPath: '/dashboard/cards/$id'
+      preLoaderRoute: typeof DashboardCardsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard/admin/settings': {
@@ -386,15 +404,16 @@ const rootRouteChildren: RootRouteChildren = {
   authRegisterRoute: authRegisterRoute,
   authResetPasswordRoute: authResetPasswordRoute,
   DashboardLayoutRoute: DashboardLayoutRoute,
+  ProfileUsernameRoute: ProfileUsernameRoute,
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardAdminContentModerationRoute: DashboardAdminContentModerationRoute,
   DashboardAdminCostTrackingRoute: DashboardAdminCostTrackingRoute,
   DashboardAdminInvitationsRoute: DashboardAdminInvitationsRoute,
   DashboardAdminSettingsRoute: DashboardAdminSettingsRoute,
-  DashboardPokemonCardsIdRoute: DashboardPokemonCardsIdRoute,
-  DashboardPokemonCardsNewRoute: DashboardPokemonCardsNewRoute,
+  DashboardCardsIdRoute: DashboardCardsIdRoute,
+  DashboardCardsNewRoute: DashboardCardsNewRoute,
+  DashboardCardsSearchRoute: DashboardCardsSearchRoute,
   DashboardAdminIndexRoute: DashboardAdminIndexRoute,
-  DashboardPokemonCardsIndexRoute: DashboardPokemonCardsIndexRoute,
   DashboardSettingsIndexRoute: DashboardSettingsIndexRoute,
   DashboardAdminUsersUserIdRoute: DashboardAdminUsersUserIdRoute,
 }

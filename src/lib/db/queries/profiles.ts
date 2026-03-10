@@ -11,9 +11,25 @@ export async function getProfile(userId: string) {
   return data;
 }
 
+export async function getProfileByUsername(username: string) {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("username", username)
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
 export async function updateProfile(
   userId: string,
-  updates: { name?: string; avatar_url?: string },
+  updates: {
+    name?: string;
+    avatar_url?: string | null;
+    username?: string;
+    is_collection_public?: boolean;
+  },
 ) {
   const { data, error } = await supabase
     .from("profiles")

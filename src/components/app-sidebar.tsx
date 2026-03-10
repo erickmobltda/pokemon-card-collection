@@ -1,9 +1,4 @@
-import {
-  LayoutDashboard,
-  Library,
-  Settings,
-  Shield,
-} from "lucide-react";
+import { LayoutDashboard, Search, Plus, Settings, Shield } from "lucide-react";
 import { NavItems } from "@/components/nav-items";
 import { NavUser } from "@/components/nav-user";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -11,8 +6,9 @@ import { Separator } from "@/components/ui/separator";
 import { useIsAdmin } from "@/hooks/auth-hooks";
 
 const mainNav = [
-  { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { title: "Minhas Cartas", href: "/dashboard/pokemon-cards", icon: Library },
+  { title: "Minha Coleção", href: "/dashboard", icon: LayoutDashboard },
+  { title: "Buscar Cartas", href: "/dashboard/cards/search", icon: Search },
+  { title: "Adicionar Manualmente", href: "/dashboard/cards/new", icon: Plus },
   { title: "Configurações", href: "/dashboard/settings", icon: Settings },
 ];
 
@@ -28,7 +24,9 @@ export function AppSidebar() {
       <div className="flex items-center gap-2 px-4 py-4 border-b">
         <span className="text-2xl">🎴</span>
         <div>
-          <p className="font-bold text-sm leading-tight">PokéCollection</p>
+          <p className="font-bold text-sm leading-tight text-purple-700 dark:text-purple-300">
+            PokéCollection
+          </p>
           <p className="text-xs text-muted-foreground">Sua coleção de cartas</p>
         </div>
       </div>

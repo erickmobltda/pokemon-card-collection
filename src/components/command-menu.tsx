@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, Library, Plus, Settings } from "lucide-react";
+import { LayoutDashboard, Search, Plus, Settings } from "lucide-react";
 import {
   CommandDialog,
   CommandEmpty,
@@ -37,30 +37,24 @@ export function CommandMenu() {
       <CommandList>
         <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>
         <CommandGroup heading="Navegação">
-          <CommandItem
-            onSelect={() => run(() => navigate({ to: "/dashboard" }))}
-          >
+          <CommandItem onSelect={() => run(() => navigate({ to: "/dashboard" }))}>
             <LayoutDashboard className="mr-2 h-4 w-4" />
-            Dashboard
+            Minha Coleção
           </CommandItem>
           <CommandItem
-            onSelect={() =>
-              run(() => navigate({ to: "/dashboard/pokemon-cards" }))
-            }
+            onSelect={() => run(() => navigate({ to: "/dashboard/cards/search" }))}
           >
-            <Library className="mr-2 h-4 w-4" />
-            Minhas Cartas
+            <Search className="mr-2 h-4 w-4" />
+            Buscar Cartas
           </CommandItem>
         </CommandGroup>
         <CommandSeparator />
         <CommandGroup heading="Ações">
           <CommandItem
-            onSelect={() =>
-              run(() => navigate({ to: "/dashboard/pokemon-cards/new" }))
-            }
+            onSelect={() => run(() => navigate({ to: "/dashboard/cards/new" }))}
           >
             <Plus className="mr-2 h-4 w-4" />
-            Nova Carta
+            Adicionar Carta Manualmente
           </CommandItem>
           <CommandItem
             onSelect={() => run(() => navigate({ to: "/dashboard/settings" }))}
