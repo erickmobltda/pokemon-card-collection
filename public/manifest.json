@@ -1,0 +1,10 @@
+{
+  "name": "PokéCollection",
+  "short_name": "PokéCollection",
+  "description": "Sua coleção de cartas Pokémon",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#7c3aed",
+  "icons": []
+}
