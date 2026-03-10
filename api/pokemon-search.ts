@@ -1,38 +1,52 @@
-import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { get as httpsGet } from "node:https";
+import type { IncomingMessage, ServerResponse } from "node:http";
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default function handler(
+  req: IncomingMessage & { url?: string },
+  res: ServerResponse,
+) {
   if (req.method !== "GET") {
-    return res.status(405).json({ error: "Method not allowed" });
+    res.writeHead(405, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: "Method not allowed" }));
+    return;
   }
 
-  const { q, pageSize = "24" } = req.query as Record<string, string>;
+  const { searchParams } = new URL(req.url ?? "/", "http://localhost");
+  const q = searchParams.get("q");
+  const pageSize = searchParams.get("pageSize") ?? "24";
 
-  if (!q || typeof q !== "string") {
-    return res.status(400).json({ error: "Missing query parameter: q" });
+  if (!q) {
+    res.writeHead(400, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: "Missing query parameter: q" }));
+    return;
   }
 
-  const url = new URL("https://api.pokemontcg.io/v2/cards");
-  url.searchParams.set("q", q);
-  url.searchParams.set("pageSize", pageSize);
+  const upstreamUrl = new URL("https://api.pokemontcg.io/v2/cards");
+  upstreamUrl.searchParams.set("q", q);
+  upstreamUrl.searchParams.set("pageSize", pageSize);
 
   const headers: Record<string, string> = {};
   if (process.env.POKEMONTCG_API_KEY) {
     headers["X-Api-Key"] = process.env.POKEMONTCG_API_KEY;
   }
 
-  try {
-    const upstream = await fetch(url.toString(), { headers });
+  const upstreamReq = httpsGet(upstreamUrl.toString(), { headers }, (upstream) => {
+    let body = "";
+    upstream.on("data", (chunk: string) => {
+      body += chunk;
+    });
+    upstream.on("end", () => {
+      res.writeHead(upstream.statusCode ?? 500, {
+        "Content-Type": "application/json",
+        "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+      });
+      res.end(body);
+    });
+  });
 
-    if (!upstream.ok) {
-      const text = await upstream.text();
-      return res.status(upstream.status).json({ error: text });
-    }
-
-    const data = await upstream.json();
-    res.setHeader("Cache-Control", "public, s-maxage=60, stale-while-revalidate=300");
-    return res.json(data);
-  } catch (err) {
-    console.error("[pokemon-search] fetch error:", err);
-    return res.status(500).json({ error: "Failed to fetch from pokemontcg.io" });
-  }
+  upstreamReq.on("error", (err: Error) => {
+    console.error("[pokemon-search] error:", err.message);
+    res.writeHead(500, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: "Failed to fetch from pokemontcg.io" }));
+  });
 }
