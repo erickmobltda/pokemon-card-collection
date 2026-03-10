@@ -41,7 +41,6 @@ import {
   CARD_CONDITIONS,
   type AddToCollectionData,
 } from "@/lib/db/schemas/cards";
-import { env } from "@/env.client";
 
 export const Route = createFileRoute("/dashboard/cards/search")({
   component: CardSearchPage,
@@ -82,17 +81,12 @@ function CardSearchPage() {
     setIsLoading(true);
     setSearched(true);
 
-    const headers: Record<string, string> = {};
-    if (env.VITE_POKEMONTCG_API_KEY) {
-      headers["X-Api-Key"] = env.VITE_POKEMONTCG_API_KEY;
-    }
-
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
 
     fetch(
-      `https://api.pokemontcg.io/v2/cards?q=name:${encodeURIComponent(debouncedQuery + "*")}&pageSize=24`,
-      { headers, signal: controller.signal },
+      `/api/pokemon-search?q=${encodeURIComponent("name:" + debouncedQuery + "*")}&pageSize=24`,
+      { signal: controller.signal },
     )
       .then((r) => r.json())
       .then((json) => {
