@@ -87,27 +87,28 @@ function CardSearchPage() {
       headers["X-Api-Key"] = env.VITE_POKEMONTCG_API_KEY;
     }
 
-    let cancelled = false;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
     fetch(
       `https://api.pokemontcg.io/v2/cards?q=name:${encodeURIComponent(debouncedQuery + "*")}&pageSize=24`,
-      { headers },
+      { headers, signal: controller.signal },
     )
       .then((r) => r.json())
       .then((json) => {
-        if (!cancelled) {
-          setResults(json.data ?? []);
-          setIsLoading(false);
-        }
+        setResults(json.data ?? []);
+        setIsLoading(false);
       })
-      .catch(() => {
-        if (!cancelled) {
+      .catch((err) => {
+        if (err.name !== "AbortError") {
           toast.error("Erro ao buscar cartas. Tente novamente.");
-          setIsLoading(false);
         }
-      });
+        setIsLoading(false);
+      })
+      .finally(() => clearTimeout(timeoutId));
 
     return () => {
-      cancelled = true;
+      controller.abort();
     };
   }, [debouncedQuery]);
 
