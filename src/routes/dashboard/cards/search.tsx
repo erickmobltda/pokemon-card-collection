@@ -82,7 +82,7 @@ function CardSearchPage() {
     setSearched(true);
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    const timeoutId = setTimeout(() => controller.abort(), 25000);
 
     fetch(
       `/api/pokemon-search?q=${encodeURIComponent("name:" + debouncedQuery + "*")}&pageSize=24`,

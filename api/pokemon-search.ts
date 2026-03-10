@@ -30,7 +30,7 @@ export default function handler(
     headers["X-Api-Key"] = process.env.POKEMONTCG_API_KEY;
   }
 
-  const upstreamReq = httpsGet(upstreamUrl.toString(), { headers }, (upstream) => {
+  const upstreamReq = httpsGet(upstreamUrl.toString(), { headers, timeout: 20000 }, (upstream) => {
     let body = "";
     upstream.on("data", (chunk: string) => {
       body += chunk;
@@ -44,9 +44,17 @@ export default function handler(
     });
   });
 
+  upstreamReq.on("timeout", () => {
+    upstreamReq.destroy();
+    res.writeHead(504, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: "pokemontcg.io timed out" }));
+  });
+
   upstreamReq.on("error", (err: Error) => {
     console.error("[pokemon-search] error:", err.message);
-    res.writeHead(500, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ error: "Failed to fetch from pokemontcg.io" }));
+    if (!res.headersSent) {
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Failed to fetch from pokemontcg.io" }));
+    }
   });
 }
