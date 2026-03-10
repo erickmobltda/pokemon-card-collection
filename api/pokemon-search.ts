@@ -1,60 +1,38 @@
-import { get as httpsGet } from "node:https";
-import type { IncomingMessage, ServerResponse } from "node:http";
+import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-export default function handler(
-  req: IncomingMessage & { url?: string },
-  res: ServerResponse,
-) {
+/**
+ * Proxy for TCGdex API — kept for edge caching and as a fallback.
+ * The frontend now calls TCGdex directly, but this endpoint still works.
+ */
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "GET") {
-    res.writeHead(405, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ error: "Method not allowed" }));
-    return;
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { searchParams } = new URL(req.url ?? "/", "http://localhost");
-  const q = searchParams.get("q");
-  const pageSize = searchParams.get("pageSize") ?? "24";
+  const name = req.query.name as string | undefined;
+  const pageSize = req.query.pageSize as string | undefined;
 
-  if (!q) {
-    res.writeHead(400, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ error: "Missing query parameter: q" }));
-    return;
+  if (!name) {
+    return res.status(400).json({ error: "Missing query parameter: name" });
   }
 
-  const upstreamUrl = new URL("https://api.pokemontcg.io/v2/cards");
-  upstreamUrl.searchParams.set("q", q);
-  upstreamUrl.searchParams.set("pageSize", pageSize);
-
-  const headers: Record<string, string> = {};
-  if (process.env.POKEMONTCG_API_KEY) {
-    headers["X-Api-Key"] = process.env.POKEMONTCG_API_KEY;
+  const url = new URL("https://api.tcgdex.net/v2/en/cards");
+  url.searchParams.set("name", name);
+  if (pageSize) {
+    url.searchParams.set("pagination:itemsPerPage", pageSize);
   }
 
-  const upstreamReq = httpsGet(upstreamUrl.toString(), { headers, timeout: 20000 }, (upstream) => {
-    let body = "";
-    upstream.on("data", (chunk: string) => {
-      body += chunk;
+  try {
+    const upstream = await fetch(url.toString(), {
+      signal: AbortSignal.timeout(15000),
     });
-    upstream.on("end", () => {
-      res.writeHead(upstream.statusCode ?? 500, {
-        "Content-Type": "application/json",
-        "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
-      });
-      res.end(body);
-    });
-  });
 
-  upstreamReq.on("timeout", () => {
-    upstreamReq.destroy();
-    res.writeHead(504, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ error: "pokemontcg.io timed out" }));
-  });
+    const data = await upstream.json();
 
-  upstreamReq.on("error", (err: Error) => {
-    console.error("[pokemon-search] error:", err.message);
-    if (!res.headersSent) {
-      res.writeHead(500, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ error: "Failed to fetch from pokemontcg.io" }));
-    }
-  });
+    res.setHeader("Cache-Control", "public, s-maxage=300, stale-while-revalidate=600");
+    return res.status(upstream.status).json(data);
+  } catch (err) {
+    console.error("[pokemon-search] error:", err);
+    return res.status(504).json({ error: "TCGdex request failed" });
+  }
 }

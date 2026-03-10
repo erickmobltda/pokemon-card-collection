@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Plus, Search } from "lucide-react";
+import { ArrowLeft, Loader2, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -46,28 +46,46 @@ export const Route = createFileRoute("/dashboard/cards/search")({
   component: CardSearchPage,
 });
 
-interface PokemonTCGCard {
+const TCGDEX_BASE = "https://api.tcgdex.net/v2/en";
+
+/** Brief card returned by TCGdex search */
+interface TCGdexCardBrief {
   id: string;
+  localId: string;
   name: string;
-  supertype: string;
-  subtypes?: string[];
-  hp?: string;
+  image?: string;
+}
+
+/** Full card returned by TCGdex card detail */
+interface TCGdexCardFull {
+  id: string;
+  localId: string;
+  name: string;
+  image?: string;
+  category?: string;
+  hp?: number;
   types?: string[];
   rarity?: string;
-  set: { name: string; id: string };
-  number: string;
-  images: { small: string; large: string };
-  artist?: string;
+  illustrator?: string;
+  stage?: string;
+  set?: { id: string; name: string };
+}
+
+async function fetchCardDetail(id: string): Promise<TCGdexCardFull> {
+  const res = await fetch(`${TCGDEX_BASE}/cards/${id}`);
+  if (!res.ok) throw new Error(`Failed to fetch card ${id}`);
+  return res.json();
 }
 
 function CardSearchPage() {
   const { user } = useSession();
   const queryClient = useQueryClient();
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<PokemonTCGCard[]>([]);
+  const [results, setResults] = useState<TCGdexCardBrief[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searched, setSearched] = useState(false);
-  const [addDialogCard, setAddDialogCard] = useState<PokemonTCGCard | null>(null);
+  const [addDialogCard, setAddDialogCard] = useState<TCGdexCardFull | null>(null);
+  const [loadingCardId, setLoadingCardId] = useState<string | null>(null);
 
   const debouncedQuery = useDebounce(query, 300);
 
@@ -82,15 +100,17 @@ function CardSearchPage() {
     setSearched(true);
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 25000);
 
     fetch(
-      `/api/pokemon-search?q=${encodeURIComponent("name:" + debouncedQuery + "*")}&pageSize=24`,
+      `${TCGDEX_BASE}/cards?name=${encodeURIComponent(debouncedQuery)}&pagination:itemsPerPage=24&sort:field=name`,
       { signal: controller.signal },
     )
-      .then((r) => r.json())
-      .then((json) => {
-        setResults(json.data ?? []);
+      .then((r) => {
+        if (!r.ok) throw new Error("Search failed");
+        return r.json();
+      })
+      .then((cards: TCGdexCardBrief[]) => {
+        setResults(cards ?? []);
         setIsLoading(false);
       })
       .catch((err) => {
@@ -98,13 +118,24 @@ function CardSearchPage() {
           toast.error("Erro ao buscar cartas. Tente novamente.");
         }
         setIsLoading(false);
-      })
-      .finally(() => clearTimeout(timeoutId));
+      });
 
     return () => {
       controller.abort();
     };
   }, [debouncedQuery]);
+
+  const handleAdd = useCallback(async (card: TCGdexCardBrief) => {
+    setLoadingCardId(card.id);
+    try {
+      const fullCard = await fetchCardDetail(card.id);
+      setAddDialogCard(fullCard);
+    } catch {
+      toast.error("Erro ao carregar detalhes da carta.");
+    } finally {
+      setLoadingCardId(null);
+    }
+  }, []);
 
   const form = useForm<AddToCollectionData>({
     resolver: zodResolver(addToCollectionSchema),
@@ -117,16 +148,16 @@ function CardSearchPage() {
       return createCard(user!.id, {
         external_id: addDialogCard.id,
         name: addDialogCard.name,
-        supertype: addDialogCard.supertype,
-        subtypes: addDialogCard.subtypes ?? null,
-        hp: addDialogCard.hp ?? null,
+        supertype: addDialogCard.category ?? null,
+        subtypes: addDialogCard.stage ? [addDialogCard.stage] : null,
+        hp: addDialogCard.hp != null ? String(addDialogCard.hp) : null,
         types: addDialogCard.types ?? null,
         rarity: addDialogCard.rarity ?? null,
-        set_name: addDialogCard.set.name,
-        set_id: addDialogCard.set.id,
-        number: addDialogCard.number,
-        image_url: addDialogCard.images.large,
-        artist: addDialogCard.artist ?? null,
+        set_name: addDialogCard.set?.name ?? null,
+        set_id: addDialogCard.set?.id ?? null,
+        number: addDialogCard.localId,
+        image_url: addDialogCard.image ? `${addDialogCard.image}/high.png` : null,
+        artist: addDialogCard.illustrator ?? null,
         condition: data.condition,
         quantity: data.quantity,
         notes: data.notes || null,
@@ -168,7 +199,7 @@ function CardSearchPage() {
           />
         </div>
         <p className="text-xs text-muted-foreground mt-2">
-          Busca via pokemontcg.io — resultados em inglês
+          Busca via TCGdex — resultados em inglês
         </p>
       </div>
 
@@ -216,9 +247,10 @@ function CardSearchPage() {
               <SearchCardItem
                 key={card.id}
                 card={card}
+                isLoadingDetail={loadingCardId === card.id}
                 onAdd={() => {
                   form.reset({ condition: "Near Mint", quantity: 1, notes: "" });
-                  setAddDialogCard(card);
+                  handleAdd(card);
                 }}
               />
             ))}
@@ -240,23 +272,25 @@ function CardSearchPage() {
           <DialogHeader>
             <DialogTitle>Adicionar à coleção</DialogTitle>
             <DialogDescription>
-              {addDialogCard?.name} — {addDialogCard?.set.name} #{addDialogCard?.number}
+              {addDialogCard?.name}
+              {addDialogCard?.set?.name && ` — ${addDialogCard.set.name}`}
+              {addDialogCard?.localId && ` #${addDialogCard.localId}`}
             </DialogDescription>
           </DialogHeader>
 
           <div className="flex gap-4 my-2">
-            {addDialogCard?.images.small && (
+            {addDialogCard?.image && (
               <img
-                src={addDialogCard.images.small}
+                src={`${addDialogCard.image}/low.png`}
                 alt={addDialogCard.name}
                 className="h-32 rounded-lg object-contain flex-shrink-0"
               />
             )}
             <div className="flex flex-col gap-1 text-sm text-muted-foreground">
               {addDialogCard?.rarity && <span>Raridade: {addDialogCard.rarity}</span>}
-              {addDialogCard?.hp && <span>HP: {addDialogCard.hp}</span>}
+              {addDialogCard?.hp != null && <span>HP: {addDialogCard.hp}</span>}
               {addDialogCard?.types && <span>Tipo: {addDialogCard.types.join(", ")}</span>}
-              {addDialogCard?.artist && <span>Artista: {addDialogCard.artist}</span>}
+              {addDialogCard?.illustrator && <span>Artista: {addDialogCard.illustrator}</span>}
             </div>
           </div>
 
@@ -347,46 +381,47 @@ function CardSearchPage() {
 
 function SearchCardItem({
   card,
+  isLoadingDetail,
   onAdd,
 }: {
-  card: PokemonTCGCard;
+  card: TCGdexCardBrief;
+  isLoadingDetail: boolean;
   onAdd: () => void;
 }) {
   return (
     <div className="group relative rounded-2xl border-2 border-purple-200 dark:border-purple-800 overflow-hidden bg-gradient-to-b from-purple-50 to-pink-50 dark:from-purple-950 dark:to-pink-950 shadow-md hover:shadow-lg transition-all hover:scale-[1.02] hover:-translate-y-0.5">
       <div className="aspect-[3/4] relative">
-        <img
-          src={card.images.small}
-          alt={card.name}
-          className="w-full h-full object-contain p-1"
-          loading="lazy"
-        />
+        {card.image ? (
+          <img
+            src={`${card.image}/low.png`}
+            alt={card.name}
+            className="w-full h-full object-contain p-1"
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
+            Sem imagem
+          </div>
+        )}
         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
           <Button
             size="sm"
             onClick={onAdd}
+            disabled={isLoadingDetail}
             className="bg-purple-600 hover:bg-purple-700 text-white shadow-lg"
           >
-            <Plus className="h-4 w-4 mr-1" />
-            Adicionar
+            {isLoadingDetail ? (
+              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+            ) : (
+              <Plus className="h-4 w-4 mr-1" />
+            )}
+            {isLoadingDetail ? "Carregando..." : "Adicionar"}
           </Button>
         </div>
       </div>
       <div className="p-2">
         <p className="font-semibold text-xs truncate">{card.name}</p>
-        <p className="text-[10px] text-muted-foreground truncate">{card.set.name}</p>
-        <div className="flex gap-1 mt-1 flex-wrap">
-          {card.rarity && (
-            <Badge variant="secondary" className="text-[9px] px-1 py-0 h-4">
-              {card.rarity}
-            </Badge>
-          )}
-          {card.types?.slice(0, 2).map((t) => (
-            <Badge key={t} variant="outline" className="text-[9px] px-1 py-0 h-4">
-              {t}
-            </Badge>
-          ))}
-        </div>
+        <p className="text-[10px] text-muted-foreground truncate">#{card.localId}</p>
       </div>
     </div>
   );
